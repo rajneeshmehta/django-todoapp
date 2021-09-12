@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  nginx: 
+    image: nginx:stable-alpine
+    restart: always
+    ports:
+        - 36627:80
+        - 43695:443
+    volumes:
+      - ./nginx-conf:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on: 
+        - backend
+  backend:
+    image: rajneeshmehta93/django-todo:github
+    restart: always
+    expose:
+      - 8000
+    depends_on: 
+        - db
+    env_file: 
+      - ./.env
+  db:
+    image: postgres
+    restart: always
+    volumes: 
+    - /workspace/data:/var/lib/postgresql/data/pgdata
+    environment:
+      POSTGRES_PASSWORD: secretpassword
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+        - ./certbot/conf:/etc/letsencrypt
+        - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"      
