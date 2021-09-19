@@ -8,4 +8,6 @@ RUN apt-get update && \
     pip3 install --upgrade pip && \
     pip3 install -r requirements.txt --no-cache-dir && \
     apt-get clean
-CMD python manage.py migrate && gunicorn todoapp.wsgi --bind 0.0.0.0:8000
+CMD python manage.py migrate && \
+    python manage.py collectstatic --noinput && \
+    gunicorn todoapp.wsgi --bind 0.0.0.0:8000
